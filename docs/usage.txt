@@ -20,6 +20,10 @@ you normally would in Django::
 
     send_mail(subject, message_body, settings.DEFAULT_FROM_EMAIL, recipients)
 
+or if you need send a html formatted message::
+
+    send_html_mail(subject, message_body, settings.DEFAULT_FROM_EMAIL, recipients)
+
 If you need prioritized messages, create an instance of EmailMessage
 and specify {'X-Mail-Queue-Priority': '<value>'} in the ``headers`` parameter,
 where <value> is one of:

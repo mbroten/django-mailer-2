@@ -35,6 +35,22 @@ def send_mail(subject, message, from_email, recipient_list,
                                  recipient_list)
     queue_email_message(email_message, priority=priority)
 
+def send_html_mail(subject, message, from_email, recipient_list, priority=None):
+    """
+    Add a new html message to the mail queue.
+
+    """
+
+    from django.core.mail import EmailMultiAlternatives
+    from django.utils.html import strip_tags
+    from django.utils.encoding import force_unicode
+
+    message_txt = strip_tags(message)
+    subject = force_unicode(subject)
+    email_message = EmailMultiAlternatives(subject, message_txt, from_email,
+        recipient_list)
+    email_message.attach_alternative(message, 'text/html')
+    queue_email_message(email_message, priority=priority)
 
 def mail_admins(subject, message, fail_silently=False, priority=None):
     """
