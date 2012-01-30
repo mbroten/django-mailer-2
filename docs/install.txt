@@ -13,7 +13,7 @@ Download and install from http://github.com/SmileyChris/django-mailer-2.git
 
 If you're using pip__ and a virtual environment, this usually looks like::
 
-    pip install -e git+http://github.com/SmileyChris/django-mailer-2.git#egg=django-mailer-2
+    pip install -e git+http://github.com/damkop/django-mailer-2.git#egg=django-mailer-2
 
 .. __: http://pip.openplans.org/
 
