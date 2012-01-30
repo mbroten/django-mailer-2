@@ -9,7 +9,7 @@ minimum supported version.
 Installing django-mailer-2
 ==========================
 
-Download and install from http://github.com/SmileyChris/django-mailer-2.git
+Download and install from http://github.com/damkop/django-mailer-2.git
 
 If you're using pip__ and a virtual environment, this usually looks like::
 
