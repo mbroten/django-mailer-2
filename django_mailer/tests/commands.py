@@ -2,7 +2,14 @@ from django.core import mail
 from django.core.management import call_command
 from django_mailer import models
 from django_mailer.tests.base import MailerTestCase
-import datetime
+
+from django import VERSION
+if (VERSION[0] >= 1 and VERSION[1] >= 4):
+    from django.utils.timezone import now
+    from datetime import date, timedelta
+else:
+    from datetime import datetime, date, timedelta
+    now = datetime.now
 
 
 class TestCommands(MailerTestCase):
@@ -24,7 +31,7 @@ class TestCommands(MailerTestCase):
         self.queue_message(subject='deferred')
         models.QueuedMessage.objects\
                     .filter(message__subject__startswith='deferred')\
-                    .update(deferred=datetime.datetime.now())
+                    .update(deferred=now())
         queued_messages = models.QueuedMessage.objects.all()
         self.assertEqual(queued_messages.count(), 3)
         self.assertEqual(len(mail.outbox), 0)
@@ -44,7 +51,7 @@ class TestCommands(MailerTestCase):
         self.queue_message(subject='deferred 3')
         models.QueuedMessage.objects\
                     .filter(message__subject__startswith='deferred')\
-                    .update(deferred=datetime.datetime.now())
+                    .update(deferred=now())
         non_deferred_messages = models.QueuedMessage.objects.non_deferred()
         # Deferred messages are returned to the queue (nothing is sent).
         self.assertEqual(non_deferred_messages.count(), 1)
@@ -54,13 +61,13 @@ class TestCommands(MailerTestCase):
         # Check the --max-retries logic.
         models.QueuedMessage.objects\
                     .filter(message__subject='deferred')\
-                    .update(deferred=datetime.datetime.now(), retries=2)
+                    .update(deferred=now(), retries=2)
         models.QueuedMessage.objects\
                     .filter(message__subject='deferred 2')\
-                    .update(deferred=datetime.datetime.now(), retries=3)
+                    .update(deferred=now(), retries=3)
         models.QueuedMessage.objects\
                     .filter(message__subject='deferred 3')\
-                    .update(deferred=datetime.datetime.now(), retries=4)
+                    .update(deferred=now(), retries=4)
         self.assertEqual(non_deferred_messages.count(), 1)
         call_command('retry_deferred', verbosity='0', max_retries=3)
         self.assertEqual(non_deferred_messages.count(), 3)
@@ -70,10 +77,10 @@ class TestCommands(MailerTestCase):
         The ``cleanup_mail`` command deletes mails older than a specified
         amount of days
         """
-        today = datetime.date.today()
+        today = date.today()
         self.assertEqual(models.Message.objects.count(), 0)
         models.Message.objects.create()
-        prev = today - datetime.timedelta(31)
+        prev = today - timedelta(31)
         models.Message.objects.create(date_created=prev)
         call_command('cleanup_mail', days=30)
         self.assertEqual(models.Message.objects.count(), 1)

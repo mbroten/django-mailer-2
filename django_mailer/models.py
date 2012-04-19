@@ -1,7 +1,12 @@
 from django.db import models
 from django_mailer import constants, managers
-import datetime
 
+from django import VERSION
+if (VERSION[0] >= 1 and VERSION[1] >= 4):
+    from django.utils.timezone import now
+else:
+    from datetime import datetime
+    now = datetime.now
 
 PRIORITIES = (
     (constants.PRIORITY_HIGH, 'high'),
@@ -15,7 +20,18 @@ RESULT_CODES = (
     (constants.RESULT_FAILED, 'failure'),
 )
 
-
+class EmailMessageWrapper(object):
+    """
+    Mock functionality in django/core/mail/message.py for testing
+    using file-based or other django MAIL_BACKENDs that expect
+    message().as_string().
+    """
+    def __init__(self, encoded_message=''):
+        self.encoded_message = encoded_message
+    
+    def as_string(self, unixfrom=False):
+        return self.encoded_message
+    
 class Message(models.Model):
     """
     An email message.
@@ -31,11 +47,14 @@ class Message(models.Model):
     subject = models.CharField(max_length=255)
 
     encoded_message = models.TextField()
-    date_created = models.DateTimeField(default=datetime.datetime.now)
+    date_created = models.DateTimeField(default=now)
 
     class Meta:
         ordering = ('date_created',)
 
+    def message(self):
+        return EmailMessageWrapper(self.encoded_message)
+        
     def __unicode__(self):
         return '%s: %s' % (self.to_address, self.subject)
 
@@ -53,7 +72,7 @@ class QueuedMessage(models.Model):
                                             default=constants.PRIORITY_NORMAL)
     deferred = models.DateTimeField(null=True, blank=True)
     retries = models.PositiveIntegerField(default=0)
-    date_queued = models.DateTimeField(default=datetime.datetime.now)
+    date_queued = models.DateTimeField(default=now)
 
     objects = managers.QueueManager()
 
@@ -61,7 +80,7 @@ class QueuedMessage(models.Model):
         ordering = ('priority', 'date_queued')
 
     def defer(self):
-        self.deferred = datetime.datetime.now()
+        self.deferred = now()
         self.save()
 
 
@@ -74,7 +93,7 @@ class Blacklist(models.Model):
     
     """
     email = models.EmailField(max_length=200)
-    date_added = models.DateTimeField(default=datetime.datetime.now)
+    date_added = models.DateTimeField(default=now)
 
     class Meta:
         ordering = ('-date_added',)
@@ -89,7 +108,7 @@ class Log(models.Model):
     """
     message = models.ForeignKey(Message, editable=False)
     result = models.PositiveSmallIntegerField(choices=RESULT_CODES)
-    date = models.DateTimeField(default=datetime.datetime.now)
+    date = models.DateTimeField(default=now)
     log_message = models.TextField()
 
     class Meta:

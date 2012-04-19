@@ -1,4 +1,10 @@
-import datetime
+from django import VERSION
+if (VERSION[0] >= 1 and VERSION[1] >= 4):
+    from django.utils.timezone import now
+    from datetime import date, timedelta
+else:
+    from datetime import datetime, date, timedelta
+    now = datetime.now
 import logging
 from optparse import make_option
 
@@ -21,8 +27,8 @@ class Command(BaseCommand):
         handler = create_handler(verbosity)
         logger.addHandler(handler)
 
-        today = datetime.date.today()
-        cutoff_date = today - datetime.timedelta(days)
+        today = date.today()
+        cutoff_date = today - timedelta(days)
         count = Message.objects.filter(date_created__lt=cutoff_date).count()
         Message.objects.filter(date_created__lt=cutoff_date).delete()
         logger.warning("Deleted %s mails created before %s " %

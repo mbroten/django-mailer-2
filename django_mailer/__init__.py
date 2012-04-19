@@ -16,7 +16,7 @@ def get_version():
 
 def send_mail(subject, message, from_email, recipient_list,
               fail_silently=False, auth_user=None, auth_password=None,
-              priority=None):
+              priority=None, headers=None):
     """
     Add a new message to the mail queue.
 
@@ -32,10 +32,11 @@ def send_mail(subject, message, from_email, recipient_list,
 
     subject = force_unicode(subject)
     email_message = EmailMessage(subject, message, from_email,
-                                 recipient_list)
+                                 recipient_list, headers=headers)
     queue_email_message(email_message, priority=priority)
 
-def send_html_mail(subject, message, from_email, recipient_list, priority=None):
+def send_html_mail(subject, message, from_email, recipient_list, 
+                   priority=None, headers=None):
     """
     Add a new html message to the mail queue.
 
@@ -48,11 +49,12 @@ def send_html_mail(subject, message, from_email, recipient_list, priority=None):
     message_txt = strip_tags(message)
     subject = force_unicode(subject)
     email_message = EmailMultiAlternatives(subject, message_txt, from_email,
-        recipient_list)
+        recipient_list, headers=headers)
     email_message.attach_alternative(message, 'text/html')
     queue_email_message(email_message, priority=priority)
 
-def mail_admins(subject, message, fail_silently=False, priority=None):
+def mail_admins(subject, message, fail_silently=False, priority=None, 
+                headers=None):
     """
     Add one or more new messages to the mail queue addressed to the site
     administrators (defined in ``settings.ADMINS``).
@@ -73,10 +75,12 @@ def mail_admins(subject, message, fail_silently=False, priority=None):
     subject = django_settings.EMAIL_SUBJECT_PREFIX + force_unicode(subject)
     from_email = django_settings.SERVER_EMAIL
     recipient_list = [recipient[1] for recipient in django_settings.ADMINS]
-    send_mail(subject, message, from_email, recipient_list, priority=priority)
+    send_mail(subject, message, from_email, recipient_list, priority=priority, 
+        headers=headers)
 
 
-def mail_managers(subject, message, fail_silently=False, priority=None):
+def mail_managers(subject, message, fail_silently=False, priority=None, 
+                  headers=None):
     """
     Add one or more new messages to the mail queue addressed to the site
     managers (defined in ``settings.MANAGERS``).
@@ -97,7 +101,8 @@ def mail_managers(subject, message, fail_silently=False, priority=None):
     subject = django_settings.EMAIL_SUBJECT_PREFIX + force_unicode(subject)
     from_email = django_settings.SERVER_EMAIL
     recipient_list = [recipient[1] for recipient in django_settings.MANAGERS]
-    send_mail(subject, message, from_email, recipient_list, priority=priority)
+    send_mail(subject, message, from_email, recipient_list, priority=priority, 
+        headers=headers)
 
 
 def queue_email_message(email_message, fail_silently=False, priority=None):

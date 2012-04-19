@@ -1,4 +1,9 @@
-import datetime
+from django import VERSION
+if (VERSION[0] >= 1 and VERSION[1] >= 4):
+    from django.utils.timezone import now
+else:
+    from datetime import datetime
+    now = datetime.now
 from django.db import models
 from django_mailer import constants
 
@@ -14,7 +19,7 @@ class QueueMethods(object):
         Exclude future time-delayed messages.
 
         """
-        return self.exclude(date_queued__gt=datetime.datetime.now)
+        return self.exclude(date_queued__gt=now)
 
     def high_priority(self):
         """

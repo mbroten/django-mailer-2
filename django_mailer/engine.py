@@ -8,6 +8,10 @@ from django.utils.encoding import smart_str
 from django_mailer import constants, models, settings
 from lockfile import FileLock, AlreadyLocked, LockTimeout
 from socket import error as SocketError
+try:
+    from boto.exception import BotoServerError
+except:
+    BotoServerError = Exception
 import logging
 import os
 import smtplib
@@ -175,13 +179,17 @@ def send_queued_message(queued_message, smtp_connection=None, blacklist=None,
                          (message.to_address.encode("utf-8"),
                           message.subject.encode("utf-8")))
             opened_connection = smtp_connection.open()
-            smtp_connection.connection.sendmail(message.from_address,
-                [message.to_address], smart_str(message.encoded_message))
+            if hasattr(smtp_connection, 'connection'):
+                smtp_connection.connection.sendmail(message.from_address,
+                    [message.to_address], smart_str(message.encoded_message))
+            else:
+                smtp_connection.send_messages([message])
             queued_message.delete()
             result = constants.RESULT_SENT
         except (SocketError, smtplib.SMTPSenderRefused,
                 smtplib.SMTPRecipientsRefused,
-                smtplib.SMTPAuthenticationError), err:
+                smtplib.SMTPAuthenticationError,
+                BotoServerError), err:
             queued_message.defer()
             logger.warning("Message to %s deferred due to failure: %s" %
                             (message.to_address.encode("utf-8"), err))
@@ -217,13 +225,17 @@ def send_message(email_message, smtp_connection=None):
 
     try:
         opened_connection = smtp_connection.open()
-        smtp_connection.connection.sendmail(email_message.from_email,
+        if hasattr(smtp_connection, 'connection'):
+            smtp_connection.connection.sendmail(email_message.from_email,
                     email_message.recipients(),
                     email_message.message().as_string())
+        else:
+            smtp_connection.send_messages([message])
         result = constants.RESULT_SENT
     except (SocketError, smtplib.SMTPSenderRefused,
             smtplib.SMTPRecipientsRefused,
-            smtplib.SMTPAuthenticationError):
+            smtplib.SMTPAuthenticationError,
+            BotoServerError):
         result = constants.RESULT_FAILED
 
     if opened_connection:

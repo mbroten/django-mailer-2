@@ -18,10 +18,18 @@ command is called.
 
 MAILER_USE_BACKEND
 ------------------
-*Django 1.2 setting*
+*Django >= 1.2 setting*
 
 The mail backend to use when actually sending e-mail.
 Defaults to ``'django.core.mail.backends.smtp.EmailBackend'``
+
+You must still set ``EMAIL_BACKEND = 'django_mailer.smtp_queue.EmailBackend'``
+regardless of this setting. For example, to use a filebased backed for
+testing that stores email in ./emails:
+
+    EMAIL_BACKEND = 'django_mailer.smtp_queue.EmailBackend'
+    MAILER_USE_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+    EMAIL_FILE_PATH = "emails"
 
 
 MAILER_MAIL_ADMINS_PRIORITY
