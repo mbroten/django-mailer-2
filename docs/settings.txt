@@ -54,17 +54,7 @@ The default value is ``None``. Valid values are the same as for
 
 MAILER_EMPTY_QUEUE_SLEEP
 ------------------------
-For use with the ``django_mailer.engine.send_loop`` helper function. 
+For use with the ``django_mailer.engine.send_loop`` helper function.
 
 When queue is empty, this setting controls how long to wait (in seconds)
-before checking again. Defaults to ``30``. 
-
-
-MAILER_LOCK_WAIT_TIMEOUT
-------------------------
-A lock is set while the ``send_mail`` command is being run. This controls the
-maximum number of seconds the command should wait if a lock is already in
-place.
-
-The default value is ``-1`` which means to never wait for the lock to be
-available.
+before checking again. Defaults to ``30``.

@@ -5,15 +5,19 @@ Installation
 An obvious prerequisite of Django Mailer 2 is Django - 1.1 is the
 minimum supported version.
 
+This fork of Django Mailer 2 also requires zc.lockfile:
+
+    pip install zc.lockfile
+
 
 Installing django-mailer-2
 ==========================
 
-Download and install from http://github.com/damkop/django-mailer-2.git
+Download and install from http://github.com/mbroten/django-mailer-2.git
 
 If you're using pip__ and a virtual environment, this usually looks like::
 
-    pip install -e git+http://github.com/damkop/django-mailer-2.git#egg=django-mailer-2
+    pip install -e git+http://github.com/mbroten/django-mailer-2#egg=django-mailer-2
 
 .. __: http://pip.openplans.org/
 
@@ -28,7 +32,7 @@ Configuring your project
 
 In your Django project's settings module, add django_mailer to your
 ``INSTALLED_APPS`` setting::
-    
+
     INSTALLED_APPS = (
         ...
         'django_mailer',

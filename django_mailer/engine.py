@@ -6,7 +6,7 @@ Methods here actually handle the sending of queued messages.
 """
 from django.utils.encoding import smart_str
 from django_mailer import constants, models, settings
-from lockfile import FileLock, AlreadyLocked, LockTimeout
+from zc.lockfile import LockFile, LockError
 from socket import error as SocketError
 try:
     from boto.exception import BotoServerError
@@ -62,20 +62,11 @@ def send_all(block_size=500, backend=None):
     of a large number of queued messages.
 
     """
-    lock = FileLock(LOCK_PATH)
-
     logger.debug("Acquiring lock...")
     try:
-        # lockfile has a bug dealing with a negative LOCK_WAIT_TIMEOUT (which
-        # is the default if it's not provided) systems which use a LinkFileLock
-        # so ensure that it is never a negative number.
-        lock.acquire(settings.LOCK_WAIT_TIMEOUT or 0)
-        #lock.acquire(settings.LOCK_WAIT_TIMEOUT)
-    except AlreadyLocked:
+        lock = LockFile(LOCK_PATH)
+    except LockError:
         logger.debug("Lock already in place. Exiting.")
-        return
-    except LockTimeout:
-        logger.debug("Waiting for the lock timed out. Exiting.")
         return
     logger.debug("Lock acquired.")
 
@@ -102,7 +93,7 @@ def send_all(block_size=500, backend=None):
         connection.close()
     finally:
         logger.debug("Releasing lock...")
-        lock.release()
+        lock.close()
         logger.debug("Lock released.")
 
     logger.debug("")
