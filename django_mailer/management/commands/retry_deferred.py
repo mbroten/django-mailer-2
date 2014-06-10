@@ -22,7 +22,11 @@ class Command(NoArgsCommand):
         count = models.QueuedMessage.objects.retry_deferred(
                                                     max_retries=max_retries)
         logger = logging.getLogger('django_mailer.commands.retry_deferred')
-        logger.warning("%s deferred message%s placed back in the queue" %
-                       (count, count != 1 and 's' or ''))
+        
+        if count > 0:
+            logger.warning("%s deferred message%s placed back in the queue" % (
+                count,
+                count != 1 and 's' or ''
+            ))
 
         logger.removeHandler(handler)
