@@ -52,6 +52,12 @@ class Message(models.Model):
     class Meta:
         ordering = ('date_created',)
 
+    def encoded_from_address(self):
+        return self.from_address.encode('utf-8')
+
+    def encoded_to_address(self):
+        return self.to_address.encode('utf-8')
+
     def message(self):
         return EmailMessageWrapper(self.encoded_message)
         

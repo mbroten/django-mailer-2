@@ -149,8 +149,10 @@ def send_queued_message(queued_message, smtp_connection=None, blacklist=None,
 
     """
     message = queued_message.message
+    
     if smtp_connection is None:
         smtp_connection = get_connection()
+
     opened_connection = False
 
     if blacklist is None:
@@ -159,39 +161,77 @@ def send_queued_message(queued_message, smtp_connection=None, blacklist=None,
         blacklisted = message.to_address in blacklist
 
     log_message = ''
+
     if blacklisted:
-        logger.info("Not sending to blacklisted email: %s" %
-                     message.to_address.encode("utf-8"))
+        logger.info("Not sending to blacklisted email: %s" % (
+            message.encoded_to_address,
+        ))
+        
         queued_message.delete()
+        
         result = constants.RESULT_SKIPPED
+
     else:
         try:
-            logger.info("Sending message to %s: %s" %
-                         (message.to_address.encode("utf-8"),
-                          message.subject.encode("utf-8")))
+            logger.info("Sending message to %s: %s" % (
+                message.encoded_to_address,
+                message.subject.encode("utf-8")
+            ))
+
             opened_connection = smtp_connection.open()
+
             if hasattr(smtp_connection, 'connection'):
-                smtp_connection.connection.sendmail(message.from_address,
-                    [message.to_address], smart_str(message.encoded_message))
+                smtp_connection.connection.sendmail(
+                    smart_str(message.encoded_from_address),
+                    [smart_str(message.encoded_to_address)],
+                    smart_str(message.encoded_message)
+                )
             else:
                 smtp_connection.send_messages([message])
+
             queued_message.delete()
             result = constants.RESULT_SENT
+
         except (SocketError, smtplib.SMTPSenderRefused,
                 smtplib.SMTPRecipientsRefused,
                 smtplib.SMTPAuthenticationError,
                 BotoServerError), err:
+            
             queued_message.defer()
-            logger.warning("Message to %s deferred due to failure: %s" %
-                            (message.to_address.encode("utf-8"), err))
+
+            logger.warning("Message to %s deferred due to failure (pk %s): %s" % (
+                message.encoded_to_address,
+                message.pk,
+                err
+            ))
+
             log_message = unicode(err)
+            
             result = constants.RESULT_FAILED
+
+        except Exception, err:
+            queued_message.defer()
+
+            logger.error("Message to %s deferred due to unexpected failure (pk %s): %s" % (
+                message.encoded_to_address,
+                message.pk,
+                err
+            ))
+            
+            log_message = unicode(err)
+            
+            result = constants
+
     if log:
-        models.Log.objects.create(message=message, result=result,
-                                  log_message=log_message)
+        models.Log.objects.create(
+            message=message,
+            result=result,
+            log_message=log_message
+        )
 
     if opened_connection:
         smtp_connection.close()
+
     return result
 
 
