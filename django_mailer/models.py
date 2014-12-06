@@ -52,9 +52,11 @@ class Message(models.Model):
     class Meta:
         ordering = ('date_created',)
 
+    @property
     def encoded_from_address(self):
         return self.from_address.encode('utf-8')
 
+    @property
     def encoded_to_address(self):
         return self.to_address.encode('utf-8')
 
