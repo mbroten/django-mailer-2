@@ -220,7 +220,7 @@ def send_queued_message(queued_message, smtp_connection=None, blacklist=None,
             
             log_message = unicode(err)
             
-            result = constants
+            result = constants.RESULT_FAILED
 
     if log:
         models.Log.objects.create(
